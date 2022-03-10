@@ -13,6 +13,10 @@ protocol UrlBuilder {
     func searchHintsRequest(term: String, limit: Int?, types: [MediaType]?) -> URLRequest
     func fetchRequest(mediaType: MediaType, id: String, include: [Include]?) -> URLRequest
     func relationshipRequest(path: String, limit: Int?, offset: Int?) -> URLRequest
+    func libraryPlaylistsRequest(limit: Int?, offset: Int?) -> URLRequest
+    func libraryTrackOfPlaylistIDRequest(playlistID: String, limit: Int?, offset: Int?) -> URLRequest
+    func libraryCreatePlaylistRequest(name: String) -> URLRequest
+    func libraryAdd(songID: String, toPlaylist playlistID: String) -> URLRequest
 }
 
 public enum CiderUrlBuilderError: Error {
@@ -30,7 +34,7 @@ private struct AppleMusicApi {
     // Search
     static let searchPath = "v1/catalog/{storefront}/search"
     static let searchHintPath = "v1/catalog/{storefront}/search/hints"
-
+    
     // Parameteres
     static let termParameter = "term"
     static let limitParameter = "limit"
@@ -40,6 +44,10 @@ private struct AppleMusicApi {
     // Fetch
     static let fetchPath = "v1/catalog/{storefront}/{mediaType}/{id}"
     static let fetchInclude = "include"
+    
+    // User
+    static let libraryPlaylistsPath = "v1/me/library/playlists"
+    static let libraryFetchPath = "v1/me/library/{mediaType}/{id}"
 }
 
 // MARK: - UrlBuilder
@@ -50,15 +58,16 @@ struct CiderUrlBuilder: UrlBuilder {
 
     let storefront: Storefront
     let developerToken: String
-    var userToken: String?
+    let userToken: String?
     private let cachePolicy = URLRequest.CachePolicy.useProtocolCachePolicy
     private let timeout: TimeInterval = 5
 
     // MARK: Init
 
-    init(storefront: Storefront, developerToken: String) {
+    init(storefront: Storefront, developerToken: String, userToken: String? = nil) {
         self.storefront = storefront
         self.developerToken = developerToken
+        self.userToken = userToken
     }
 
     private var baseApiUrl: URL {
@@ -71,7 +80,48 @@ struct CiderUrlBuilder: UrlBuilder {
     }
 
     // MARK: Construct urls
-
+    private func libraryAddSongToPlaylistID(_ playlistID: String) -> URL {
+        var components = URLComponents()
+        
+        components.path = AppleMusicApi.libraryFetchPath.addMediaType(.playlists).addId(playlistID) + "/tracks"
+        
+        // Construct final url
+        return components.url(relativeTo: baseApiUrl)!
+    }
+    private func libraryCreatePlaylistUrl() -> URL {
+        var components = URLComponents()
+        
+        components.path = AppleMusicApi.libraryPlaylistsPath
+        
+        // Construct final url
+        return components.url(relativeTo: baseApiUrl)!
+    }
+    
+    private func libraryTrackOfPlaylistIDUrl(playlistID: String, limit: Int?, offset: Int?) -> URL {
+        var components = URLComponents()
+        
+        components.path = AppleMusicApi.libraryFetchPath.addMediaType(.playlists).addId(playlistID) + "/tracks"
+        
+        // Construct Query
+        components.apply(limit: limit)
+        components.apply(offset: offset)
+        
+        // Construct final url
+        return components.url(relativeTo: baseApiUrl)!
+    }
+    
+    private func libraryPlaylistsUrl(limit: Int?, offset: Int?) -> URL {
+        var components = URLComponents()
+        components.path = AppleMusicApi.libraryPlaylistsPath
+        
+        // Construct Query
+        components.apply(limit: limit)
+        components.apply(offset: offset)
+        
+        // Construct final url
+        return components.url(relativeTo: baseApiUrl)!
+    }
+    
     private func seachUrl(term: String, limit: Int?, offset: Int?, types: [MediaType]?) -> URL {
 
         // Construct url path
@@ -109,7 +159,6 @@ struct CiderUrlBuilder: UrlBuilder {
 
     private func fetchUrl(mediaType: MediaType, id: String, include: [Include]?) -> URL {
         var components = URLComponents()
-
         components.path = AppleMusicApi.fetchPath.addStorefront(storefront).addMediaType(mediaType).addId(id)
         components.apply(include: include)
 
@@ -127,7 +176,50 @@ struct CiderUrlBuilder: UrlBuilder {
     }
 
     // MARK: Construct requests
+    func libraryAdd(songID: String, toPlaylist playlistID: String) -> URLRequest {
+        let url = libraryAddSongToPlaylistID(playlistID)
+        let request = constructRequest(url: url)
+        
+        let info = """
+        {
+            "data":[
+                {
+                    "id":"\(songID)",
+                    "type":"songs"
+                }
+            ]
+        }
+        """
+        let data = info.data(using: .utf8)!
+        
+        return addBody(body: data, request: request)
+    }
+    
+    func libraryCreatePlaylistRequest(name: String) -> URLRequest {
+        let url = libraryCreatePlaylistUrl()
+        let request = constructRequest(url: url)
+        
+        let info = """
+            {
+                "attributes":{
+                    "name":"\(name)"
+                }
+            }
+ """
+        let data = info.data(using: .utf8)!
 
+        return addBody(body: data, request: request)
+    }
+    func libraryTrackOfPlaylistIDRequest(playlistID: String, limit: Int?, offset: Int?) -> URLRequest {
+        let url = libraryTrackOfPlaylistIDUrl(playlistID: playlistID, limit: limit, offset: offset)
+        return constructRequest(url: url)
+    }
+    
+    func libraryPlaylistsRequest(limit: Int?, offset: Int?) -> URLRequest {
+        let url = libraryPlaylistsUrl(limit: limit, offset: offset)
+        return constructRequest(url: url)
+    }
+    
     func searchRequest(term: String, limit: Int?, offset: Int?, types: [MediaType]?) -> URLRequest {
         let url = seachUrl(term: term, limit: limit, offset: offset, types: types)
         return constructRequest(url: url)
@@ -151,12 +243,22 @@ struct CiderUrlBuilder: UrlBuilder {
     private func constructRequest(url: URL) -> URLRequest {
         var request = URLRequest(url: url, cachePolicy: cachePolicy, timeoutInterval: timeout)
         request = addAuth(request: request)
-
+        request = addUserToken(request: request)
         return request
     }
 
+    private func addBody(body: Data, request: URLRequest) -> URLRequest {
+        var request = request
+        
+        request.httpMethod = "POST"
+        request.httpBody = body
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        
+        return request
+    }
+    
     // MARK: Add authentication
-
     private func addAuth(request: URLRequest) -> URLRequest {
         var request = request
 
@@ -166,14 +268,12 @@ struct CiderUrlBuilder: UrlBuilder {
         return request
     }
 
-    // TODO: Make this private once we add a request that needs it and can test via that vector.
-    func addUserToken(request: URLRequest) throws -> URLRequest {
-        guard let userToken = userToken else {
-            throw CiderUrlBuilderError.noUserToken
+    private func addUserToken(request: URLRequest) -> URLRequest {
+        if let userToken = userToken {
+            var request = request
+            request.setValue(userToken, forHTTPHeaderField: "Music-User-Token")
+            return request
         }
-
-        var request = request
-        request.setValue(userToken, forHTTPHeaderField: "Music-User-Token")
 
         return request
     }

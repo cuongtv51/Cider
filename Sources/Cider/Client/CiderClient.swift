@@ -39,11 +39,38 @@ public struct CiderClient {
        - developerToken: The Apple Music developer token to use in requests.
        - urlFetcher: The `UrlFetcher` to use for processing requests. Defaults to a `URLSession` with the default `URLSessionConfiguration`.
      */
-    public init(storefront: Storefront, developerToken: String, urlFetcher: UrlFetcher = CiderClient.defaultURLFetcher) {
-        let urlBuilder = CiderUrlBuilder(storefront: storefront, developerToken: developerToken)
+    public init(storefront: Storefront, developerToken: String, userToken: String? = nil, urlFetcher: UrlFetcher = CiderClient.defaultURLFetcher) {
+        let urlBuilder = CiderUrlBuilder(storefront: storefront, developerToken: developerToken, userToken: userToken)
         self.init(urlBuilder: urlBuilder, urlFetcher: urlFetcher)
     }
 
+    // MARK: Library
+    public func add(songID: String, toPlaylist playlistID: String, completion: ((Error?) -> Void)?) {
+        let request = urlBuilder.libraryAdd(songID: songID, toPlaylist: playlistID)
+        fetch(request) { (results: ResponseRoot<LibraryPlaylist>?, error) in
+            completion?(nil)
+        }
+    }
+    
+    public func createLibraryPlaylist(name: String, completion: ((LibraryPlaylist?, Error?) -> Void)?) {
+        let request = urlBuilder.libraryCreatePlaylistRequest(name: name)
+        fetch(request) { (results: ResponseRoot<LibraryPlaylist>?, error) in
+            completion?(results?.data?.first, error)
+        }
+    }
+    
+    public func getLibraryPlaylists(limit: Int?, offset: Int?, completion: (([LibraryPlaylist]?, Error?) -> Void)?) {
+        let request = urlBuilder.libraryPlaylistsRequest(limit: limit, offset: offset)
+        fetch(request) { (results: ResponseRoot<LibraryPlaylist>?, error) in
+            completion?(results?.data, error)
+        }
+    }
+    
+    public func libraryTracksOfPlaylistID(_ playlistID: String, limit: Int?, offset: Int?, completion: (([LibraryTrack]?, Error?) -> Void)?) {
+        let request = urlBuilder.libraryTrackOfPlaylistIDRequest(playlistID: playlistID, limit: limit, offset: offset)
+        fetch(request) { (results: ResponseRoot<LibraryTrack>?, error) in completion?(results?.data, error) }
+    }
+        
     // MARK: Search
 
     /**
@@ -128,7 +155,7 @@ public struct CiderClient {
         let request = urlBuilder.fetchRequest(mediaType: .playlists, id: id, include: include)
         fetch(request) { (results: ResponseRoot<Playlist>?, error) in completion?(results?.data?.first, error) }
     }
-
+    
     /**
      Lookup a music video by id.
 
@@ -171,9 +198,8 @@ public struct CiderClient {
         let request = urlBuilder.relationshipRequest(path: path, limit: limit, offset: offset)
         fetch(request) { (results: ResponseRoot<T>?, error) in completion?(results?.data, error) }
     }
-
+    
     // MARK: Helpers
-
     private func fetch<T>(_ request: URLRequest, completion: ((ResponseRoot<T>?, Error?) -> Void)?) {
         fetcher.fetch(request: request) { (data, error) in
             guard let data = data else {
