@@ -46,6 +46,8 @@
 		3BD1D15A1F319C83001E9705 /* AlbumTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BD1D1591F319C83001E9705 /* AlbumTests.swift */; };
 		3BD1D15C1F31A1D8001E9705 /* Album.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BD1D15B1F31A1D8001E9705 /* Album.swift */; };
 		3BD1D15E1F31A462001E9705 /* PlayParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BD1D15D1F31A462001E9705 /* PlayParameters.swift */; };
+		5EE078D927D99DC10091DF72 /* LibraryTrack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EE078D727D99DC10091DF72 /* LibraryTrack.swift */; };
+		5EE078DA27D99DC10091DF72 /* LibraryPlaylist.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EE078D827D99DC10091DF72 /* LibraryPlaylist.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -101,6 +103,8 @@
 		3BD1D1591F319C83001E9705 /* AlbumTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumTests.swift; sourceTree = "<group>"; };
 		3BD1D15B1F31A1D8001E9705 /* Album.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Album.swift; sourceTree = "<group>"; };
 		3BD1D15D1F31A462001E9705 /* PlayParameters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayParameters.swift; sourceTree = "<group>"; };
+		5EE078D727D99DC10091DF72 /* LibraryTrack.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LibraryTrack.swift; sourceTree = "<group>"; };
+		5EE078D827D99DC10091DF72 /* LibraryPlaylist.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LibraryPlaylist.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -162,6 +166,8 @@
 				3BD1D15D1F31A462001E9705 /* PlayParameters.swift */,
 				3B8F78951F531DBE0091E3DC /* Storefront.swift */,
 				3B1C416D1F322BEB0000AADB /* Track.swift */,
+				5EE078D827D99DC10091DF72 /* LibraryPlaylist.swift */,
+				5EE078D727D99DC10091DF72 /* LibraryTrack.swift */,
 			);
 			path = ResourceObjects;
 			sourceTree = "<group>";
@@ -351,6 +357,7 @@
 				3B70426A1F50AD6500479B2A /* Playlist.swift in Sources */,
 				3B9B8CA31F32271C009ECADB /* EditorialNotes.swift in Sources */,
 				3BAF09A11F3BB7050018AA8B /* ContentRating.swift in Sources */,
+				5EE078DA27D99DC10091DF72 /* LibraryPlaylist.swift in Sources */,
 				3BAF09B21F3C31FE0018AA8B /* Include.swift in Sources */,
 				3B8F78941F531A610091E3DC /* UrlFetcher.swift in Sources */,
 				3B8F78961F531DBE0091E3DC /* Storefront.swift in Sources */,
@@ -363,6 +370,7 @@
 				3BD1D15C1F31A1D8001E9705 /* Album.swift in Sources */,
 				3BAF09A61F3BB8FC0018AA8B /* Resource.swift in Sources */,
 				3B70426C1F50B12F00479B2A /* Curator.swift in Sources */,
+				5EE078D927D99DC10091DF72 /* LibraryTrack.swift in Sources */,
 				3BAF09B01F3C1D0C0018AA8B /* CiderClient.swift in Sources */,
 				3BAF09A81F3BBACC0018AA8B /* ResponseRoot.swift in Sources */,
 				3BAF09AA1F3BC06F0018AA8B /* Relationship.swift in Sources */,
